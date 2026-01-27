@@ -1,0 +1,41 @@
+{
+  "name": "@blackroad-os/atlas",
+  "version": "0.1.0",
+  "description": "Cloudflare Workers Agent Jobs System - Self-healing, auto-updating repo synchronization for BlackRoad OS",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "format": "prettier --write src/"
+  },
+  "keywords": [
+    "cloudflare-workers",
+    "agents",
+    "jobs",
+    "self-healing",
+    "blackroad-os"
+  ],
+  "author": "BlackRoad OS",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240512.0",
+    "@types/node": "^20.12.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.5.0",
+    "wrangler": "^3.50.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.0"
+  },
+  "dependencies": {
+    "hono": "^4.2.0",
+    "zod": "^3.23.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

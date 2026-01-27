@@ -1,0 +1,121 @@
+# ⬛⬜🛣️ BlackRoad Atlas - Cloudflare Workers Agent Jobs System
+name = "atlas"
+main = "src/index.ts"
+compatibility_date = "2024-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Account configuration (set via environment or wrangler login)
+# account_id = ""
+
+[observability]
+enabled = true
+
+# Environment variables
+[vars]
+ENVIRONMENT = "development"
+LOG_LEVEL = "debug"
+SELF_HEAL_ENABLED = "true"
+AUTO_UPDATE_INTERVAL = "300" # 5 minutes in seconds
+
+# Durable Objects for stateful agent coordination
+[[durable_objects.bindings]]
+name = "JOB_COORDINATOR"
+class_name = "JobCoordinator"
+
+[[durable_objects.bindings]]
+name = "REPO_SYNC_AGENT"
+class_name = "RepoSyncAgent"
+
+[[durable_objects.bindings]]
+name = "HEALTH_MONITOR"
+class_name = "HealthMonitor"
+
+[[durable_objects.bindings]]
+name = "COHESIVENESS_CHECKER"
+class_name = "CohesivenessChecker"
+
+# Durable Object migrations
+[[migrations]]
+tag = "v1"
+new_classes = ["JobCoordinator", "RepoSyncAgent", "HealthMonitor", "CohesivenessChecker"]
+
+# Queues for async job processing
+[[queues.producers]]
+queue = "atlas-jobs"
+binding = "JOBS_QUEUE"
+
+[[queues.producers]]
+queue = "atlas-sync"
+binding = "SYNC_QUEUE"
+
+[[queues.producers]]
+queue = "atlas-resolution"
+binding = "RESOLUTION_QUEUE"
+
+[[queues.consumers]]
+queue = "atlas-jobs"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "atlas-dlq"
+
+[[queues.consumers]]
+queue = "atlas-sync"
+max_batch_size = 5
+max_batch_timeout = 60
+max_retries = 5
+dead_letter_queue = "atlas-dlq"
+
+[[queues.consumers]]
+queue = "atlas-resolution"
+max_batch_size = 3
+max_batch_timeout = 120
+max_retries = 10
+dead_letter_queue = "atlas-dlq"
+
+# KV namespaces for caching and state
+[[kv_namespaces]]
+binding = "CACHE"
+id = "atlas-cache"
+preview_id = "atlas-cache-preview"
+
+[[kv_namespaces]]
+binding = "REPO_STATE"
+id = "atlas-repo-state"
+preview_id = "atlas-repo-state-preview"
+
+[[kv_namespaces]]
+binding = "JOB_HISTORY"
+id = "atlas-job-history"
+preview_id = "atlas-job-history-preview"
+
+# R2 bucket for artifact storage
+[[r2_buckets]]
+binding = "ARTIFACTS"
+bucket_name = "atlas-artifacts"
+preview_bucket_name = "atlas-artifacts-preview"
+
+# Scheduled triggers (Cron)
+[triggers]
+crons = [
+  "*/5 * * * *",   # Every 5 minutes - health check & auto-update
+  "0 * * * *",     # Every hour - full repo sync
+  "0 0 * * *"      # Daily - cohesiveness analysis
+]
+
+# Tail consumers for logging
+[[tail_consumers]]
+service = "atlas-logger"
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Production environment
+[env.production]
+vars = { ENVIRONMENT = "production", LOG_LEVEL = "info", SELF_HEAL_ENABLED = "true", AUTO_UPDATE_INTERVAL = "300" }
+
+# Staging environment
+[env.staging]
+vars = { ENVIRONMENT = "staging", LOG_LEVEL = "debug", SELF_HEAL_ENABLED = "true", AUTO_UPDATE_INTERVAL = "120" }
